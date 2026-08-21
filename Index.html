@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Super Note</title>
-    <!-- استفاده از فونت وزیرمتن برای ظاهر جذاب فارسی -->
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- SortableJS برای درگ و دراپ -->
+    <title>My Super Keep</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <style>
         :root {
-            /* رنگ‌های روشن شبیه گوگل کیپ */
             --bg-color: #ffffff;
-            --note-bg: #fff475; /* زرد ملایم کیپ */
+            --note-bg: #fff475;
             --text-color: #202124;
             --border-color: #e0e0e0;
             --checked-text: #5f6368;
@@ -21,9 +18,8 @@
         }
 
         [data-theme="dark"] {
-            /* رنگ‌های تاریک و مدرن */
             --bg-color: #202124;
-            --note-bg: #41331c; /* زرد تیره کیپ در حالت دارک */
+            --note-bg: #41331c;
             --text-color: #e8eaed;
             --border-color: #5f6368;
             --checked-text: #9aa0a6;
@@ -34,235 +30,144 @@
             font-family: 'Vazirmatn', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             transition: background-color 0.3s, color 0.3s;
         }
 
         .header {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            background-color: var(--bg-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; background-color: var(--bg-color);
+            position: sticky; top: 0; z-index: 100;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .controls span {
-            font-size: 24px;
-            cursor: pointer;
-            margin-left: 15px;
-            user-select: none;
+            font-size: 22px; cursor: pointer; margin-left: 12px; user-select: none;
         }
 
         .note-container {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: var(--note-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            max-width: 750px; margin: 15px auto;
+            background-color: var(--note-bg); border-radius: 12px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
 
-        .category {
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
+        .category { margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .category-header { font-weight: bold; font-size: 17px; cursor: pointer; padding: 8px 0; display: flex; align-items: center; }
+        .category-header::before { content: '▼'; font-size: 10px; margin-left: 8px; transition: transform 0.2s; }
+        .category.collapsed .category-header::before { transform: rotate(90deg); }
+        .category.collapsed .task-list, .category.collapsed .add-task { display: none; }
 
-        .category-header {
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            user-select: none;
-        }
-
-        .category-header::before {
-            content: '▼';
-            font-size: 12px;
-            margin-left: 10px;
-            transition: transform 0.3s;
-        }
-
-        .category.collapsed .category-header::before {
-            transform: rotate(90deg);
-        }
-
-        .category.collapsed .task-list, 
-        .category.collapsed .add-task {
-            display: none;
-        }
-
-        .task-list {
-            min-height: 10px; /* برای درگ و دراپ در لیست خالی */
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            cursor: grab;
-            border-radius: 5px;
-        }
-
-        .task-item:hover {
-            background-color: var(--hover-bg);
-        }
-
-        .task-item input[type="checkbox"] {
-            margin-left: 12px;
-            transform: scale(1.3);
-            accent-color: #5f6368;
-        }
-
-        .task-item span {
-            flex-grow: 1;
-        }
-
-        .task-item.checked span {
-            text-decoration: line-through;
-            color: var(--checked-text);
-        }
-
-        .add-task {
-            display: flex;
-            margin-top: 10px;
-            padding: 0 5px;
-        }
+        .task-list { min-height: 15px; }
+        .task-item { display: flex; align-items: center; padding: 6px 0; border-radius: 4px; }
+        .task-item:hover { background-color: var(--hover-bg); }
+        .task-item input[type="checkbox"] { margin-left: 10px; transform: scale(1.2); }
+        .task-item span { flex-grow: 1; outline: none; }
+        .task-item.checked span { text-decoration: line-through; color: var(--checked-text); }
 
         .add-task input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            font-family: inherit;
-            font-size: 16px;
-            outline: none;
+            width: 100%; background: transparent; border: none;
+            color: var(--text-color); font-family: inherit; font-size: 15px; outline: none; padding: 6px 0;
         }
 
-        .add-task input::placeholder {
-            color: var(--checked-text);
-        }
-
-        /* بخش کارهای انجام شده */
-        .completed-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px dashed var(--border-color);
-        }
-
-        .completed-title {
-            color: var(--checked-text);
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
+        .completed-section { margin-top: 25px; padding-top: 15px; border-top: 2px dashed var(--border-color); }
+        .completed-title { color: var(--checked-text); font-size: 13px; margin-bottom: 8px; }
 
         .paste-area {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-family: inherit;
-            resize: vertical;
-            display: none;
+            width: 100%; background: transparent; border: 1px solid var(--border-color);
+            color: var(--text-color); border-radius: 8px; padding: 10px; margin-bottom: 15px;
+            font-family: inherit; resize: vertical; display: none; box-sizing: border-box;
         }
 
+        .status-bar { font-size: 12px; color: var(--checked-text); text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="title">یادداشت جامع من</div>
+        <div style="font-weight:bold;">یادداشت روزانه من</div>
         <div class="controls">
-            <span id="pasteBtn" title="پیست کردن از کیپ">📋</span>
-            <span id="clearCompletedBtn" title="پاک کردن تیک خورده‌ها">🗑️</span>
-            <span id="themeToggle" title="تغییر تم">🌙</span>
+            <span id="syncBtn" title="همگام‌سازی دستی">🔄</span>
+            <span id="pasteBtn" title="پیست از کیپ">📋</span>
+            <span id="clearCompletedBtn" title="پاک کردن تیک‌خورده‌ها">🗑️</span>
+            <span id="themeToggle" title="تم">🌙</span>
             <span id="fullscreenToggle" title="تمام صفحه">🔲</span>
+            <span id="settingsBtn" title="تنظیمات اتصال">⚙️</span>
         </div>
     </div>
 
     <div class="note-container">
-        <textarea id="pasteInput" class="paste-area" rows="4" placeholder="لیست گوگل کیپ را اینجا پیست کنید (هر خط یک تسک). سپس روی دسته بندی دلخواهتان درگ کنید یا اینتر بزنید..."></textarea>
-        
-        <div id="categories-container">
-            <!-- دسته‌بندی‌ها با جاوا اسکریپت لود می‌شوند -->
-        </div>
+        <textarea id="pasteInput" class="paste-area" rows="3" placeholder="متن کپی شده از گوگل کیپ را اینجا پیست کنید و اینتر بزنید..."></textarea>
+        <div id="categories-container"></div>
 
         <div class="completed-section">
-            <div class="completed-title">کارهای انجام شده (تیک خورده)</div>
+            <div class="completed-title">کارهای انجام شده</div>
             <div id="completed-list" class="task-list"></div>
         </div>
+        <div id="statusBar" class="status-bar">در حال آماده‌سازی...</div>
     </div>
 
     <script>
-        // ساختار اولیه داده‌ها
         const defaultCategories = [
-            "کارهای ضروری",
-            "لیست خرید",
-            "امور کاری",
-            "درمان و پزشکی",
-            "کمپر",
-            "تعمیرات و نگهداری خودرو"
+            "کارهای ضروری", "لیست خرید", "امور کاری",
+            "درمان و پزشکی", "کمپر", "تعمیرات و نگهداری خودرو"
         ];
+
+        let GIST_ID = localStorage.getItem('GIST_ID') || '';
+        let GITHUB_TOKEN = localStorage.getItem('GITHUB_TOKEN') || '';
 
         const categoriesContainer = document.getElementById('categories-container');
         const completedList = document.getElementById('completed-list');
+        const statusBar = document.getElementById('statusBar');
 
-        // رندر کردن دسته‌بندی‌ها
-        defaultCategories.forEach(cat => {
-            const catDiv = document.createElement('div');
-            catDiv.className = 'category';
-            catDiv.innerHTML = `
-                <div class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">${cat}</div>
-                <div class="task-list" data-category="${cat}"></div>
-                <div class="add-task">
-                    <span style="margin-left:12px; color:var(--checked-text)">+</span>
-                    <input type="text" placeholder="افزودن آیتم..." onkeypress="handleAddTask(event, this)">
-                </div>
-            `;
-            categoriesContainer.appendChild(catDiv);
-        });
-
-        // فعال‌سازی Drag and Drop برای تمام لیست‌ها
-        const lists = document.querySelectorAll('.task-list');
-        lists.forEach(list => {
-            new Sortable(list, {
-                group: 'shared', // اجازه جابجایی بین تمام گروه‌ها
-                animation: 150,
-                ghostClass: 'sortable-ghost'
+        function initApp() {
+            categoriesContainer.innerHTML = '';
+            defaultCategories.forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category';
+                catDiv.innerHTML = `
+                    <div class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">${cat}</div>
+                    <div class="task-list" data-category="${cat}"></div>
+                    <div class="add-task">
+                        <input type="text" placeholder="+ افزودن آیتم..." onkeypress="handleAddTask(event, this)">
+                    </div>
+                `;
+                categoriesContainer.appendChild(catDiv);
             });
-        });
 
-        // ایجاد یک تسک جدید
+            document.querySelectorAll('.task-list').forEach(list => {
+                new Sortable(list, {
+                    group: 'shared',
+                    animation: 150,
+                    onEnd: () => saveToCloud()
+                });
+            });
+
+            if (GIST_ID && GITHUB_TOKEN) {
+                loadFromCloud();
+            } else {
+                statusBar.innerText = 'لطفا از آیکون ⚙️ تنظیمات گیت‌هاب را وارد کنید.';
+            }
+        }
+
         function createTaskElement(text, isChecked = false) {
             const div = document.createElement('div');
             div.className = `task-item ${isChecked ? 'checked' : ''}`;
             div.innerHTML = `
                 <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleTask(this)">
-                <span>${text}</span>
+                <span contenteditable="true" onblur="saveToCloud()">${text}</span>
             `;
             return div;
         }
 
-        // هندل کردن اینتر برای افزودن تسک
         function handleAddTask(e, inputElem) {
             if (e.key === 'Enter' && inputElem.value.trim() !== '') {
-                const taskText = inputElem.value.trim();
                 const taskList = inputElem.parentElement.previousElementSibling;
-                taskList.appendChild(createTaskElement(taskText));
+                taskList.appendChild(createTaskElement(inputElem.value.trim()));
                 inputElem.value = '';
+                saveToCloud();
             }
         }
 
-        // هندل کردن تیک زدن تسک (انتقال به پایین)
         function toggleTask(checkbox) {
             const taskItem = checkbox.parentElement;
             if (checkbox.checked) {
@@ -270,70 +175,151 @@
                 completedList.appendChild(taskItem);
             } else {
                 taskItem.classList.remove('checked');
-                // برای سادگی در این نسخه، وقتی تیک برداشته میشه میره تو لیست کارهای ضروری
-                // در نسخه دیتابیس دار میشه دقیق فهمید از کدوم گروه اومده
-                document.querySelector('.task-list').appendChild(taskItem); 
+                document.querySelector('.task-list').appendChild(taskItem);
+            }
+            saveToCloud();
+        }
+
+        // --- مدیریت داده‌های ابری (GitHub Gist API) ---
+
+        async function saveToCloud() {
+            if (!GIST_ID || !GITHUB_TOKEN) return;
+            statusBar.innerText = 'در حال ذخیره در گیت‌هاب...';
+
+            const data = { categories: {}, completed: [] };
+            document.querySelectorAll('.category').forEach(catDiv => {
+                const catName = catDiv.querySelector('.category-header').innerText;
+                data.categories[catName] = [];
+                catDiv.querySelectorAll('.task-list .task-item span').forEach(span => {
+                    data.categories[catName].push(span.innerText);
+                });
+            });
+
+            completedList.querySelectorAll('.task-item span').forEach(span => {
+                data.completed.push(span.innerText);
+            });
+
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: { 'tasks.json': { content: JSON.stringify(data, null, 2) } }
+                    })
+                });
+                if (res.ok) statusBar.innerText = 'ذخیره شد ✓';
+                else statusBar.innerText = 'خطا در ذخیره‌سازی!';
+            } catch (err) {
+                statusBar.innerText = 'خطا در ارتباط با شبکه!';
             }
         }
 
-        // --- امکانات هدر ---
+        async function loadFromCloud() {
+            if (!GIST_ID || !GITHUB_TOKEN) return;
+            statusBar.innerText = 'در حال دریافت اطلاعات...';
 
-        // حالت تاریک / روشن
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', () => {
-            const body = document.body;
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                themeToggle.innerText = '🌙';
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                themeToggle.innerText = '🌞';
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                });
+                if (res.ok) {
+                    const gist = await res.json();
+                    const content = gist.files['tasks.json'].content;
+                    if (content && content.trim() !== '{}') {
+                        const data = JSON.parse(content);
+                        
+                        // پاکسازی لیست‌های فعلی
+                        document.querySelectorAll('.task-list').forEach(l => l.innerHTML = '');
+                        
+                        // بازسازی کارهای فعال
+                        if (data.categories) {
+                            Object.keys(data.categories).forEach(catName => {
+                                const listElem = document.querySelector(`[data-category="${catName}"]`);
+                                if (listElem) {
+                                    data.categories[catName].forEach(text => {
+                                        listElem.appendChild(createTaskElement(text, false));
+                                    });
+                                }
+                            });
+                        }
+                        // بازسازی کارهای انجام‌شده
+                        if (data.completed) {
+                            data.completed.forEach(text => {
+                                completedList.appendChild(createTaskElement(text, true));
+                            });
+                        }
+                    }
+                    statusBar.innerText = 'بروزرسانی شد ✓';
+                }
+            } catch (err) {
+                statusBar.innerText = 'خطا در لود داده‌ها!';
+            }
+        }
+
+        // --- اکشن‌های کنترل صفحه ---
+
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            const gId = prompt('Gist ID را وارد کنید:', GIST_ID);
+            const token = prompt('GitHub Token را وارد کنید:', GITHUB_TOKEN);
+            if (gId !== null && token !== null) {
+                GIST_ID = gId.trim();
+                GITHUB_TOKEN = token.trim();
+                localStorage.setItem('GIST_ID', GIST_ID);
+                localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
+                loadFromCloud();
             }
         });
 
-        // فول اسکرین
-        const fullscreenToggle = document.getElementById('fullscreenToggle');
-        fullscreenToggle.addEventListener('click', () => {
+        document.getElementById('syncBtn').addEventListener('click', loadFromCloud);
+
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            document.body.toggleAttribute('data-theme');
+            this.innerText = isDark ? '🌙' : '🌞';
+        });
+
+        document.getElementById('fullscreenToggle').addEventListener('click', function() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
-                fullscreenToggle.innerText = '⬜';
+                this.innerText = '⬜';
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                    fullscreenToggle.innerText = '🔲';
-                }
+                document.exitFullscreen();
+                this.innerText = '🔲';
             }
         });
 
-        // پاک کردن تسک‌های انجام شده
         document.getElementById('clearCompletedBtn').addEventListener('click', () => {
-            if(confirm('تمام کارهای تیک خورده پاک شوند؟')) {
+            if(confirm('کارهای تیک‌خورده پاک شوند؟')) {
                 completedList.innerHTML = '';
+                saveToCloud();
             }
         });
 
-        // پیست کردن از کیپ
-        const pasteBtn = document.getElementById('pasteBtn');
-        const pasteInput = document.getElementById('pasteInput');
-        pasteBtn.addEventListener('click', () => {
-            pasteInput.style.display = pasteInput.style.display === 'none' || pasteInput.style.display === '' ? 'block' : 'none';
+        document.getElementById('pasteBtn').addEventListener('click', () => {
+            const area = document.getElementById('pasteInput');
+            area.style.display = area.style.display === 'block' ? 'none' : 'block';
         });
 
-        pasteInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && pasteInput.value.trim() !== '') {
+        document.getElementById('pasteInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
                 e.preventDefault();
-                const lines = pasteInput.value.split('\n');
-                const firstCategory = document.querySelector('.task-list');
+                const lines = e.target.value.split('\n');
+                const firstList = document.querySelector('.task-list');
                 lines.forEach(line => {
-                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim(); // پاک کردن کاراکترهای اضافی کیپ
-                    if(text) firstCategory.appendChild(createTaskElement(text));
+                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim();
+                    if(text) firstList.appendChild(createTaskElement(text));
                 });
-                pasteInput.value = '';
-                pasteInput.style.display = 'none';
+                e.target.value = '';
+                e.target.style.display = 'none';
+                saveToCloud();
             }
         });
 
+        // شروع برنامه
+        initApp();
     </script>
 </body>
-          </html>
-          
+</html>
