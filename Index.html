@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Super Note</title>
+    <!-- استفاده از فونت وزیرمتن برای ظاهر جذاب فارسی -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <!-- SortableJS برای درگ و دراپ -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <style>
+        :root {
+            /* رنگ‌های روشن شبیه گوگل کیپ */
+            --bg-color: #ffffff;
+            --note-bg: #fff475; /* زرد ملایم کیپ */
+            --text-color: #202124;
+            --border-color: #e0e0e0;
+            --checked-text: #5f6368;
+            --hover-bg: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            /* رنگ‌های تاریک و مدرن */
+            --bg-color: #202124;
+            --note-bg: #41331c; /* زرد تیره کیپ در حالت دارک */
+            --text-color: #e8eaed;
+            --border-color: #5f6368;
+            --checked-text: #9aa0a6;
+            --hover-bg: rgba(255,255,255,0.05);
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background-color: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .controls span {
+            font-size: 24px;
+            cursor: pointer;
+            margin-left: 15px;
+            user-select: none;
+        }
+
+        .note-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: var(--note-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+
+        .category {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .category-header {
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            user-select: none;
+        }
+
+        .category-header::before {
+            content: '▼';
+            font-size: 12px;
+            margin-left: 10px;
+            transition: transform 0.3s;
+        }
+
+        .category.collapsed .category-header::before {
+            transform: rotate(90deg);
+        }
+
+        .category.collapsed .task-list, 
+        .category.collapsed .add-task {
+            display: none;
+        }
+
+        .task-list {
+            min-height: 10px; /* برای درگ و دراپ در لیست خالی */
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: grab;
+            border-radius: 5px;
+        }
+
+        .task-item:hover {
+            background-color: var(--hover-bg);
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-left: 12px;
+            transform: scale(1.3);
+            accent-color: #5f6368;
+        }
+
+        .task-item span {
+            flex-grow: 1;
+        }
+
+        .task-item.checked span {
+            text-decoration: line-through;
+            color: var(--checked-text);
+        }
+
+        .add-task {
+            display: flex;
+            margin-top: 10px;
+            padding: 0 5px;
+        }
+
+        .add-task input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .add-task input::placeholder {
+            color: var(--checked-text);
+        }
+
+        /* بخش کارهای انجام شده */
+        .completed-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border-color);
+        }
+
+        .completed-title {
+            color: var(--checked-text);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .paste-area {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-family: inherit;
+            resize: vertical;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title">یادداشت جامع من</div>
+        <div class="controls">
+            <span id="pasteBtn" title="پیست کردن از کیپ">📋</span>
+            <span id="clearCompletedBtn" title="پاک کردن تیک خورده‌ها">🗑️</span>
+            <span id="themeToggle" title="تغییر تم">🌙</span>
+            <span id="fullscreenToggle" title="تمام صفحه">🔲</span>
+        </div>
+    </div>
+
+    <div class="note-container">
+        <textarea id="pasteInput" class="paste-area" rows="4" placeholder="لیست گوگل کیپ را اینجا پیست کنید (هر خط یک تسک). سپس روی دسته بندی دلخواهتان درگ کنید یا اینتر بزنید..."></textarea>
+        
+        <div id="categories-container">
+            <!-- دسته‌بندی‌ها با جاوا اسکریپت لود می‌شوند -->
+        </div>
+
+        <div class="completed-section">
+            <div class="completed-title">کارهای انجام شده (تیک خورده)</div>
+            <div id="completed-list" class="task-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // ساختار اولیه داده‌ها
+        const defaultCategories = [
+            "کارهای ضروری",
+            "لیست خرید",
+            "امور کاری",
+            "درمان و پزشکی",
+            "کمپر",
+            "تعمیرات و نگهداری خودرو"
+        ];
+
+        const categoriesContainer = document.getElementById('categories-container');
+        const completedList = document.getElementById('completed-list');
+
+        // رندر کردن دسته‌بندی‌ها
+        defaultCategories.forEach(cat => {
+            const catDiv = document.createElement('div');
+            catDiv.className = 'category';
+            catDiv.innerHTML = `
+                <div class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">${cat}</div>
+                <div class="task-list" data-category="${cat}"></div>
+                <div class="add-task">
+                    <span style="margin-left:12px; color:var(--checked-text)">+</span>
+                    <input type="text" placeholder="افزودن آیتم..." onkeypress="handleAddTask(event, this)">
+                </div>
+            `;
+            categoriesContainer.appendChild(catDiv);
+        });
+
+        // فعال‌سازی Drag and Drop برای تمام لیست‌ها
+        const lists = document.querySelectorAll('.task-list');
+        lists.forEach(list => {
+            new Sortable(list, {
+                group: 'shared', // اجازه جابجایی بین تمام گروه‌ها
+                animation: 150,
+                ghostClass: 'sortable-ghost'
+            });
+        });
+
+        // ایجاد یک تسک جدید
+        function createTaskElement(text, isChecked = false) {
+            const div = document.createElement('div');
+            div.className = `task-item ${isChecked ? 'checked' : ''}`;
+            div.innerHTML = `
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleTask(this)">
+                <span>${text}</span>
+            `;
+            return div;
+        }
+
+        // هندل کردن اینتر برای افزودن تسک
+        function handleAddTask(e, inputElem) {
+            if (e.key === 'Enter' && inputElem.value.trim() !== '') {
+                const taskText = inputElem.value.trim();
+                const taskList = inputElem.parentElement.previousElementSibling;
+                taskList.appendChild(createTaskElement(taskText));
+                inputElem.value = '';
+            }
+        }
+
+        // هندل کردن تیک زدن تسک (انتقال به پایین)
+        function toggleTask(checkbox) {
+            const taskItem = checkbox.parentElement;
+            if (checkbox.checked) {
+                taskItem.classList.add('checked');
+                completedList.appendChild(taskItem);
+            } else {
+                taskItem.classList.remove('checked');
+                // برای سادگی در این نسخه، وقتی تیک برداشته میشه میره تو لیست کارهای ضروری
+                // در نسخه دیتابیس دار میشه دقیق فهمید از کدوم گروه اومده
+                document.querySelector('.task-list').appendChild(taskItem); 
+            }
+        }
+
+        // --- امکانات هدر ---
+
+        // حالت تاریک / روشن
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.innerText = '🌙';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.innerText = '🌞';
+            }
+        });
+
+        // فول اسکرین
+        const fullscreenToggle = document.getElementById('fullscreenToggle');
+        fullscreenToggle.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fullscreenToggle.innerText = '⬜';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    fullscreenToggle.innerText = '🔲';
+                }
+            }
+        });
+
+        // پاک کردن تسک‌های انجام شده
+        document.getElementById('clearCompletedBtn').addEventListener('click', () => {
+            if(confirm('تمام کارهای تیک خورده پاک شوند؟')) {
+                completedList.innerHTML = '';
+            }
+        });
+
+        // پیست کردن از کیپ
+        const pasteBtn = document.getElementById('pasteBtn');
+        const pasteInput = document.getElementById('pasteInput');
+        pasteBtn.addEventListener('click', () => {
+            pasteInput.style.display = pasteInput.style.display === 'none' || pasteInput.style.display === '' ? 'block' : 'none';
+        });
+
+        pasteInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && pasteInput.value.trim() !== '') {
+                e.preventDefault();
+                const lines = pasteInput.value.split('\n');
+                const firstCategory = document.querySelector('.task-list');
+                lines.forEach(line => {
+                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim(); // پاک کردن کاراکترهای اضافی کیپ
+                    if(text) firstCategory.appendChild(createTaskElement(text));
+                });
+                pasteInput.value = '';
+                pasteInput.style.display = 'none';
+            }
+        });
+
+    </script>
+</body>
+          </html>
+          
