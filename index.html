@@ -2,376 +2,124 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- رنگ نوار آدرس و سیستم در موبایل -->
-    <meta name="theme-color" content="#ffffff" id="theme-color-meta">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
     <title>مدیریت کارها</title>
     <style>
         :root {
             --bg-color: #ffffff;
             --text-color: #202124;
-            --toolbar-bg: #ffffff; /* بدون خط و همرنگ پس‌زمینه */
-            --icon-color: #5f6368;
-            --task-hover: #f1f3f4;
-            --item-bg-dark-opacity: 1; /* برای کنترل رنگ روشن در دارک مود */
+            --toolbar-bg: #ffffff;
+            --item-bg: #f9f9f9;
         }
-
         body.dark-mode {
-            --bg-color: #121212; /* رنگ کاملاً تیره برای بک‌گراند */
+            --bg-color: #121212;
             --text-color: #e8eaed;
             --toolbar-bg: #121212;
-            --icon-color: #9aa0a6;
-            --task-hover: #202124;
-            --item-bg-dark-opacity: 0.15; /* محو کردن رنگ‌های پاستلی در دارک مود */
+            --item-bg: #1e1e1e;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-            padding-bottom: 50px;
-        }
-
-        /* Toolbar Styles */
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 15px;
-            background-color: var(--toolbar-bg);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            /* خط زیر تولبار حذف شد */
-        }
-
-        .toolbar-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--icon-color);
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-
-        .toolbar-btn:hover {
-            background-color: var(--task-hover);
-        }
-
-        .toolbar-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* Main Content */
-        .container {
-            padding: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* Category Styles */
-        .category {
-            margin-bottom: 15px;
-            border-radius: 10px;
-            overflow: hidden;
-            /* خطوط بین عنوان ها حذف شد */
-        }
-
-        .category-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .category-content {
-            padding: 10px 15px;
-            display: block; /* بصورت پیش‌فرض برای انیمیشن */
-        }
-
-        .category.collapsed .category-content {
-            display: none;
-        }
-
-        /* Task Styles */
-        .task-list {
-            list-style: none;
-        }
-
-        .task-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            gap: 10px;
-        }
-
-        .task-checkbox {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .task-text {
-            flex-grow: 1;
-            outline: none;
-            border: none;
-            background: transparent;
-            color: inherit;
-            font-size: 1rem;
-        }
-
-        .task-text.completed {
-            text-decoration: line-through;
-            opacity: 0.6;
-        }
-
-        /* Inputs */
-        .add-input {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            background: transparent;
-            color: inherit;
-            font-size: 1rem;
-            outline: none;
-        }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 0; transition: 0.3s; }
         
-        .add-task-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 5px 0;
-            margin-top: 5px;
-        }
-
-        .add-task-container::before {
-            content: "+";
-            font-size: 20px;
-            color: var(--icon-color);
-        }
-
-        .main-input-wrapper {
-            margin-bottom: 20px;
-        }
+        .toolbar { display: flex; gap: 10px; padding: 10px; background: var(--toolbar-bg); position: sticky; top: 0; z-index: 10; border-bottom: 0; }
+        .toolbar button { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
         
-        .main-input-wrapper input {
-            background-color: var(--task-hover);
-            border-radius: 8px;
-        }
-
+        #new-category { width: 90%; margin: 10px auto; display: block; padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: var(--bg-color); color: var(--text-color); }
+        
+        .category { margin: 10px; border-radius: 12px; overflow: hidden; background: var(--item-bg); }
+        .cat-header { padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
+        .cat-content { padding: 10px; display: none; }
+        .cat-content.show { display: block; }
+        
+        .task-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+        .task-checkbox { width: 20px; height: 20px; }
+        .completed { text-decoration: line-through; opacity: 0.6; }
     </style>
 </head>
 <body>
 
-    <!-- Toolbar -->
     <div class="toolbar">
-        <button class="toolbar-btn" id="btn-undo" title="Undo (بازگشت)">↩️</button>
-        <button class="toolbar-btn" id="btn-redo" title="Redo (جلو رفتن)">↪️</button>
-        <button class="toolbar-btn" id="btn-toggle-all" title="Collapse/Expand All (باز/بسته کردن همه)">🔽</button>
-        <button class="toolbar-btn" id="btn-theme" title="Dark/Light Mode (تغییر تم)">🌙</button>
+        <button onclick="undo()">↩️</button>
+        <button onclick="redo()">↪️</button>
+        <button onclick="toggleAll()">↕️</button>
+        <button onclick="toggleTheme()">🌙</button>
     </div>
 
-    <!-- Main Container -->
-    <div class="container">
-        <div class="main-input-wrapper">
-            <input type="text" id="new-category-input" class="add-input" placeholder="افزودن لیست جدید (مثال: لیست خرید) و زدن Enter...">
-        </div>
+    <input type="text" id="new-category" placeholder="افزودن لیست جدید...">
 
-        <!-- لیست دسته‌بندی‌ها اینجا قرار می‌گیرد -->
-        <div id="board"></div>
-    </div>
+    <div id="app"></div>
 
     <script>
-        // پالت رنگ‌های روشن برای دسته‌بندی‌ها
-        const pastelColors = [
-            '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', 
-            '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff', 
-            '#fffffc', '#e4f1ee'
-        ];
+        let data = JSON.parse(localStorage.getItem('todoData')) || [];
+        let history = [JSON.stringify(data)];
+        let historyIndex = 0;
 
-        // متغیرهای سیستم Undo/Redo
-        let history = [];
-        let historyIndex = -1;
-        let isTyping = false; // جلوگیری از ذخیره لحظه‌ای در هنگام تایپ
-
-        const board = document.getElementById('board');
-        const undoBtn = document.getElementById('btn-undo');
-        const redoBtn = document.getElementById('btn-redo');
-        const themeMeta = document.getElementById('theme-color-meta');
-
-        // ذخیره وضعیت (State) در تاریخچه برای Undo/Redo
-        function saveState() {
-            const currentState = board.innerHTML;
-            
-            // اگر تغییری نکرده ذخیره نکن
-            if (historyIndex >= 0 && history[historyIndex] === currentState) return;
-
-            // حذف تاریخچه‌های جلوتر (زمانی که Undo کردیم و تغییر جدید ایجاد دادیم)
-            if (historyIndex < history.length - 1) {
-                history = history.slice(0, historyIndex + 1);
-            }
-
-            history.push(currentState);
+        function save() {
+            localStorage.setItem('todoData', JSON.stringify(data));
+            history = history.slice(0, historyIndex + 1);
+            history.push(JSON.stringify(data));
             historyIndex++;
-            updateUndoRedoButtons();
+            render();
         }
 
-        // آپدیت ظاهر دکمه‌های Undo و Redo
-        function updateUndoRedoButtons() {
-            undoBtn.disabled = historyIndex <= 0;
-            redoBtn.disabled = historyIndex >= history.length - 1;
-        }
+        function undo() { if(historyIndex > 0) { historyIndex--; data = JSON.parse(history[historyIndex]); localStorage.setItem('todoData', JSON.stringify(data)); render(); } }
+        function redo() { if(historyIndex < history.length - 1) { historyIndex++; data = JSON.parse(history[historyIndex]); localStorage.setItem('todoData', JSON.stringify(data)); render(); } }
 
-        // عملکرد Undo
-        undoBtn.addEventListener('click', () => {
-            if (historyIndex > 0) {
-                historyIndex--;
-                board.innerHTML = history[historyIndex];
-                updateUndoRedoButtons();
-            }
-        });
-
-        // عملکرد Redo
-        redoBtn.addEventListener('click', () => {
-            if (historyIndex < history.length - 1) {
-                historyIndex++;
-                board.innerHTML = history[historyIndex];
-                updateUndoRedoButtons();
-            }
-        });
-
-        // تولید رنگ تصادفی از پالت
-        function getRandomColor() {
-            return pastelColors[Math.floor(Math.random() * pastelColors.length)];
-        }
-        
-        // تبدیل رنگ HEX به فرمتی که در دارک مود قابل استفاده باشد (شفافیت)
-        function applyColor(element, hexColor) {
-            element.style.backgroundColor = hexColor;
-            // در CSS با متغیر کنترل می‌شود تا در دارک مود ملایم شود
-            element.style.setProperty('--cat-bg', hexColor);
-        }
-
-        // ایجاد دسته‌بندی جدید
-        document.getElementById('new-category-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && this.value.trim() !== '') {
-                const categoryColor = getRandomColor();
-                
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category collapsed'; // پیش‌فرض بسته (Collapse) است
-                
-                // ایجاد هدر با رنگ پس‌زمینه (در حالت دارک مود با CSS محو می‌شود)
-                categoryDiv.innerHTML = `
-                    <div class="category-header" style="background-color: color-mix(in srgb, ${categoryColor} calc(100% * var(--item-bg-dark-opacity)), transparent);">
-                        <span>${this.value.trim()}</span>
-                        <span class="toggle-icon">🔽</span>
-                    </div>
-                    <div class="category-content">
-                        <ul class="task-list"></ul>
-                        <div class="add-task-container">
-                            <input type="text" class="add-input task-input" placeholder="آیتم جدید + Enter">
-                        </div>
-                    </div>
-                `;
-                
-                board.prepend(categoryDiv);
-                this.value = ''; // خالی کردن اینپوت اصلی
-                saveState();
-            }
-        });
-
-        // استفاده از Event Delegation برای کل اکشن‌های روی بورد (برای کارکرد صحیح بعد از Undo/Redo)
-        board.addEventListener('click', function(e) {
-            // باز و بسته کردن دسته‌بندی (Collapse/Expand)
-            if (e.target.closest('.category-header')) {
-                const category = e.target.closest('.category');
-                category.classList.toggle('collapsed');
-                const icon = category.querySelector('.toggle-icon');
-                icon.textContent = category.classList.contains('collapsed') ? '🔽' : '🔼';
-                saveState();
-            }
-
-            // تیک زدن چک‌باکس‌ها
-            if (e.target.classList.contains('task-checkbox')) {
-                const textSpan = e.target.nextElementSibling;
-                if (e.target.checked) {
-                    textSpan.classList.add('completed');
-                } else {
-                    textSpan.classList.remove('completed');
-                }
-                saveState();
-            }
-        });
-
-        // گوش دادن به Enter برای افزودن تسک (با Event Delegation)
-        board.addEventListener('keypress', function(e) {
-            if (e.target.classList.contains('task-input') && e.key === 'Enter') {
-                const text = e.target.value.trim();
-                if (text !== '') {
-                    const ul = e.target.closest('.category-content').querySelector('.task-list');
-                    const li = document.createElement('li');
-                    li.className = 'task-item';
-                    li.innerHTML = `
-                        <input type="checkbox" class="task-checkbox">
-                        <span class="task-text">${text}</span>
-                    `;
-                    ul.appendChild(li);
-                    e.target.value = ''; // خالی کردن اینپوت
-                    saveState();
-                }
-            }
-        });
-
-        // دکمه باز/بسته کردن همه (Expand / Collapse All)
-        let isAllCollapsed = true;
-        document.getElementById('btn-toggle-all').addEventListener('click', function() {
-            const categories = document.querySelectorAll('.category');
-            isAllCollapsed = !isAllCollapsed;
-            
-            categories.forEach(cat => {
-                const icon = cat.querySelector('.toggle-icon');
-                if (isAllCollapsed) {
-                    cat.classList.add('collapsed');
-                    if(icon) icon.textContent = '🔽';
-                } else {
-                    cat.classList.remove('collapsed');
-                    if(icon) icon.textContent = '🔼';
-                }
-            });
-            this.textContent = isAllCollapsed ? '🔽' : '🔼';
-            saveState();
-        });
-
-        // تغییر تم (Dark Mode / Light Mode) و همگام‌سازی نوار آدرس
-        document.getElementById('btn-theme').addEventListener('click', function() {
+        function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
-            
-            // تغییر آیکون
-            this.textContent = isDark ? '☀️' : '🌙';
-            
-            // تغییر رنگ نوار آدرس گوشی و هدر/فوتر برای یکپارچگی
-            const themeColor = isDark ? '#121212' : '#ffffff';
-            themeMeta.setAttribute('content', themeColor);
-        });
+            document.getElementById('meta-theme-color').content = isDark ? '#121212' : '#ffffff';
+        }
 
-        // مقداردهی اولیه سیستم تاریخچه
-        saveState();
+        function toggleAll() {
+            const contents = document.querySelectorAll('.cat-content');
+            const shouldShow = contents[0]?.style.display !== 'block';
+            contents.forEach(c => c.style.display = shouldShow ? 'block' : 'none');
+        }
 
+        document.getElementById('new-category').onkeydown = (e) => {
+            if(e.key === 'Enter' && e.target.value) {
+                data.push({ title: e.target.value, collapsed: true, tasks: [], color: `hsl(${Math.random() * 360}, 70%, 80%)` });
+                e.target.value = '';
+                save();
+            }
+        };
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+            data.forEach((cat, catIdx) => {
+                const div = document.createElement('div');
+                div.className = 'category';
+                div.style.borderRight = `5px solid ${cat.color}`;
+                div.innerHTML = `
+                    <div class="cat-header" onclick="toggleCat(${catIdx})">
+                        ${cat.title} <span>${cat.collapsed ? '🔽' : '🔼'}</span>
+                    </div>
+                    <div class="cat-content ${cat.collapsed ? '' : 'show'}">
+                        ${cat.tasks.map((t, tIdx) => `
+                            <div class="task-item">
+                                <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${catIdx}, ${tIdx})">
+                                <span class="${t.done ? 'completed' : ''}">${t.text}</span>
+                            </div>
+                        `).join('')}
+                        <input type="text" placeholder="تسک جدید..." onkeydown="addTask(event, ${catIdx})">
+                    </div>
+                `;
+                app.appendChild(div);
+            });
+        }
+
+        function toggleCat(idx) { data[idx].collapsed = !data[idx].collapsed; render(); }
+        function toggleTask(cIdx, tIdx) { data[cIdx].tasks[tIdx].done = !data[cIdx].tasks[tIdx].done; save(); }
+        function addTask(e, idx) {
+            if(e.key === 'Enter' && e.target.value) {
+                data[idx].tasks.push({ text: e.target.value, done: false });
+                e.target.value = '';
+                save();
+            }
+        }
+
+        render();
     </script>
 </body>
 </html>
-
