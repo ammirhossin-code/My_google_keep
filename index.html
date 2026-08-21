@@ -3,470 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Super Keep</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
+    <!-- رنگ نوار آدرس و سیستم در موبایل -->
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta">
+    <title>مدیریت کارها</title>
     <style>
         :root {
             --bg-color: #ffffff;
-            --note-bg: #ffffff; /* رنگ پیش‌فرض */
             --text-color: #202124;
-            --border-color: #e0e0e0;
-            --checked-text: #5f6368;
-            --hover-bg: rgba(0,0,0,0.05);
-            --app-font-size: 15px;
+            --toolbar-bg: #ffffff; /* بدون خط و همرنگ پس‌زمینه */
+            --icon-color: #5f6368;
+            --task-hover: #f1f3f4;
+            --item-bg-dark-opacity: 1; /* برای کنترل رنگ روشن در دارک مود */
         }
 
-        [data-theme="dark"] {
-            --bg-color: #202124;
-            --note-bg: #202124;
+        body.dark-mode {
+            --bg-color: #121212; /* رنگ کاملاً تیره برای بک‌گراند */
             --text-color: #e8eaed;
-            --border-color: #5f6368;
-            --checked-text: #9aa0a6;
-            --hover-bg: rgba(255,255,255,0.05);
+            --toolbar-bg: #121212;
+            --icon-color: #9aa0a6;
+            --task-hover: #202124;
+            --item-bg-dark-opacity: 0.15; /* محو کردن رنگ‌های پاستلی در دارک مود */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Vazirmatn', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-size: var(--app-font-size);
-            margin: 0; padding: 0;
             transition: background-color 0.3s, color 0.3s;
+            padding-bottom: 50px;
         }
 
-        .header {
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-            padding: 12px 15px; background-color: var(--bg-color);
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* Toolbar Styles */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background-color: var(--toolbar-bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            /* خط زیر تولبار حذف شد */
         }
 
-        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .controls span { font-size: 20px; cursor: pointer; user-select: none; padding: 4px; }
-        .controls span:active { transform: scale(0.9); }
-
-        .note-container {
-            max-width: 750px; margin: 15px auto;
-            background-color: var(--note-bg); border-radius: 12px; padding: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15); border: 1px solid var(--border-color);
-            transition: background-color 0.3s;
+        .toolbar-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--icon-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.2s;
         }
 
-        /* استایل‌های درگ و دراپ */
-        .drag-handle {
-            cursor: grab; color: #9aa0a6; padding: 0 5px; font-size: 18px; user-select: none;
+        .toolbar-btn:hover {
+            background-color: var(--task-hover);
         }
-        .drag-handle:active { cursor: grabbing; }
 
-        .category { margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-        .category-header-wrap { display: flex; align-items: center; }
+        .toolbar-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Main Content */
+        .container {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Category Styles */
+        .category {
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            /* خطوط بین عنوان ها حذف شد */
+        }
+
+        .category-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .category-content {
+            padding: 10px 15px;
+            display: block; /* بصورت پیش‌فرض برای انیمیشن */
+        }
+
+        .category.collapsed .category-content {
+            display: none;
+        }
+
+        /* Task Styles */
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            gap: 10px;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex-grow: 1;
+            outline: none;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-size: 1rem;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Inputs */
+        .add-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
         
-        .category-header { 
-            font-weight: bold; font-size: 1.1em; cursor: pointer; padding: 8px 0; 
-            display: flex; align-items: center; flex-grow: 1; user-select: none;
-        }
-        .category-header::before { content: '▼'; font-size: 0.6em; margin-left: 8px; transition: transform 0.2s; }
-        .category.collapsed .category-header::before { transform: rotate(90deg); }
-        .category.collapsed .task-list, .category.collapsed .add-task { display: none; }
-
-        .task-list { min-height: 15px; }
-        .task-item { display: flex; align-items: center; padding: 6px 0; border-radius: 4px; }
-        .task-item:hover { background-color: var(--hover-bg); }
-        .task-item input[type="checkbox"] { margin-left: 8px; transform: scale(1.2); }
-        .task-item span[contenteditable] { flex-grow: 1; outline: none; padding: 2px 5px; min-height: 20px; }
-        .task-item.checked span[contenteditable] { text-decoration: line-through; color: var(--checked-text); }
-        .task-item.selected-for-move { background-color: rgba(66, 133, 244, 0.15); }
-
-        .add-task input {
-            width: 100%; background: transparent; border: none;
-            color: var(--text-color); font-family: inherit; font-size: 1em; outline: none; padding: 6px 0;
+        .add-task-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            margin-top: 5px;
         }
 
-        .completed-section { margin-top: 25px; padding-top: 15px; border-top: 2px dashed var(--border-color); }
-        .completed-title { color: var(--checked-text); font-size: 0.9em; margin-bottom: 8px; }
-
-        /* پالت رنگ‌ها */
-        .color-palette {
-            display: none; justify-content: center; gap: 8px; flex-wrap: wrap;
-            padding: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color);
-        }
-        .color-swatch {
-            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
-            border: 1px solid var(--border-color);
+        .add-task-container::before {
+            content: "+";
+            font-size: 20px;
+            color: var(--icon-color);
         }
 
-        /* نوار ابزار انتخاب گروهی */
-        .bulk-action-bar {
-            display: none; background: #4285f4; color: white; padding: 10px; 
-            border-radius: 8px; margin-bottom: 15px; align-items: center; justify-content: space-between;
+        .main-input-wrapper {
+            margin-bottom: 20px;
         }
-        body.bulk-mode .bulk-action-bar { display: flex; }
-        .bulk-action-bar select { padding: 5px; font-family: inherit; border-radius: 4px; }
-        .bulk-action-bar button { background: white; color: #4285f4; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-family: inherit;}
+        
+        .main-input-wrapper input {
+            background-color: var(--task-hover);
+            border-radius: 8px;
+        }
 
-        .paste-area {
-            width: 100%; background: transparent; border: 1px solid var(--border-color);
-            color: var(--text-color); border-radius: 8px; padding: 10px; margin-bottom: 15px;
-            font-family: inherit; resize: vertical; display: none; box-sizing: border-box;
-        }
-        .status-bar { font-size: 0.8em; color: var(--checked-text); text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div style="font-weight:bold;">یادداشت روزانه من</div>
-        <div class="controls">
-            <span id="bulkSelectBtn" title="انتخاب گروهی برای انتقال">🗹</span>
-            <span id="pasteBtn" title="پیست از کیپ">📋</span>
-            <span id="colorBtn" title="تغییر رنگ">🎨</span>
-            <span id="fontMinus" title="کوچک کردن فونت">A-</span>
-            <span id="fontPlus" title="بزرگ کردن فونت">A+</span>
-            <span id="themeToggle" title="تم تاریک/روشن">🌙</span>
-            <span id="settingsBtn" title="تنظیمات ابری">⚙️</span>
-        </div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="toolbar-btn" id="btn-undo" title="Undo (بازگشت)">↩️</button>
+        <button class="toolbar-btn" id="btn-redo" title="Redo (جلو رفتن)">↪️</button>
+        <button class="toolbar-btn" id="btn-toggle-all" title="Collapse/Expand All (باز/بسته کردن همه)">🔽</button>
+        <button class="toolbar-btn" id="btn-theme" title="Dark/Light Mode (تغییر تم)">🌙</button>
     </div>
 
-    <div class="note-container">
-        <!-- پالت رنگ‌های کیپ -->
-        <div id="colorPalette" class="color-palette"></div>
-
-        <!-- نوار انتقال گروهی -->
-        <div id="bulkActionBar" class="bulk-action-bar">
-            <span>تسک‌های مورد نظر را تیک بزنید</span>
-            <div>
-                <select id="bulkTargetCategory"></select>
-                <button id="bulkMoveBtn">انتقال</button>
-                <button id="bulkCancelBtn" style="background: transparent; color: white; border: 1px solid white;">لغو</button>
-            </div>
+    <!-- Main Container -->
+    <div class="container">
+        <div class="main-input-wrapper">
+            <input type="text" id="new-category-input" class="add-input" placeholder="افزودن لیست جدید (مثال: لیست خرید) و زدن Enter...">
         </div>
 
-        <textarea id="pasteInput" class="paste-area" rows="3" placeholder="لیست کپی شده از کیپ را اینجا پیست کنید و اینتر بزنید..."></textarea>
-        
-        <div id="categories-container"></div>
-
-        <div class="completed-section">
-            <div class="completed-title">کارهای انجام شده (برای حذف کلیک کنید)</div>
-            <div id="completed-list" class="task-list"></div>
-            <button id="clearCompletedBtn" style="margin-top:10px; padding:5px 10px; font-family:inherit; cursor:pointer;">پاک کردن تیک‌خورده‌ها</button>
-        </div>
-        <div id="statusBar" class="status-bar">آماده‌سازی...</div>
+        <!-- لیست دسته‌بندی‌ها اینجا قرار می‌گیرد -->
+        <div id="board"></div>
     </div>
 
     <script>
-        const defaultCategories = [
-            "کارهای ضروری", "لیست خرید", "امور کاری",
-            "درمان و پزشکی", "کمپر", "تعمیرات و نگهداری خودرو"
+        // پالت رنگ‌های روشن برای دسته‌بندی‌ها
+        const pastelColors = [
+            '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', 
+            '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff', 
+            '#fffffc', '#e4f1ee'
         ];
 
-        // رنگ‌های گوگل کیپ (فرمت: [رنگ تم روشن، رنگ تم تاریک])
-        const keepColors = [
-            { light: '#ffffff', dark: '#202124' }, // پیش‌فرض
-            { light: '#f28b82', dark: '#5c2b29' }, // قرمز
-            { light: '#fbbc04', dark: '#614a19' }, // نارنجی
-            { light: '#fff475', dark: '#635d19' }, // زرد
-            { light: '#ccff90', dark: '#345920' }, // سبز
-            { light: '#a7ffeb', dark: '#16504b' }, // فیروزه‌ای
-            { light: '#cbf0f8', dark: '#2d555e' }, // آبی روشن
-            { light: '#aecbfa', dark: '#1e3a5f' }, // آبی تیره
-            { light: '#d7aefb', dark: '#42275e' }, // بنفش
-            { light: '#e6c9a8', dark: '#442f19' }, // قهوه‌ای
-            { light: '#e8eaed', dark: '#3c3f41' }  // خاکستری
-        ];
+        // متغیرهای سیستم Undo/Redo
+        let history = [];
+        let historyIndex = -1;
+        let isTyping = false; // جلوگیری از ذخیره لحظه‌ای در هنگام تایپ
 
-        let GIST_ID = localStorage.getItem('GIST_ID') || '';
-        let GITHUB_TOKEN = localStorage.getItem('GITHUB_TOKEN') || '';
-        let currentTheme = localStorage.getItem('THEME') || 'light';
-        let currentColorIndex = parseInt(localStorage.getItem('BG_COLOR_INDEX')) || 0;
-        let currentFontSize = parseInt(localStorage.getItem('FONT_SIZE')) || 15;
-        let isBulkMode = false;
+        const board = document.getElementById('board');
+        const undoBtn = document.getElementById('btn-undo');
+        const redoBtn = document.getElementById('btn-redo');
+        const themeMeta = document.getElementById('theme-color-meta');
 
-        const categoriesContainer = document.getElementById('categories-container');
-        const completedList = document.getElementById('completed-list');
-        const statusBar = document.getElementById('statusBar');
+        // ذخیره وضعیت (State) در تاریخچه برای Undo/Redo
+        function saveState() {
+            const currentState = board.innerHTML;
+            
+            // اگر تغییری نکرده ذخیره نکن
+            if (historyIndex >= 0 && history[historyIndex] === currentState) return;
 
-        // اعمال تنظیمات اولیه پوسته
-        function applySettings() {
-            document.documentElement.style.setProperty('--app-font-size', currentFontSize + 'px');
-            if (currentTheme === 'dark') document.body.setAttribute('data-theme', 'dark');
-            else document.body.removeAttribute('data-theme');
-            applyColor(currentColorIndex);
+            // حذف تاریخچه‌های جلوتر (زمانی که Undo کردیم و تغییر جدید ایجاد دادیم)
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+
+            history.push(currentState);
+            historyIndex++;
+            updateUndoRedoButtons();
         }
 
-        // ساخت پالت رنگ
-        function initColorPalette() {
-            const palette = document.getElementById('colorPalette');
-            keepColors.forEach((color, index) => {
-                const swatch = document.createElement('div');
-                swatch.className = 'color-swatch';
-                swatch.style.backgroundColor = document.body.getAttribute('data-theme') === 'dark' ? color.dark : color.light;
-                swatch.onclick = () => {
-                    applyColor(index);
-                    saveToCloud();
-                };
-                palette.appendChild(swatch);
-            });
+        // آپدیت ظاهر دکمه‌های Undo و Redo
+        function updateUndoRedoButtons() {
+            undoBtn.disabled = historyIndex <= 0;
+            redoBtn.disabled = historyIndex >= history.length - 1;
         }
 
-        function applyColor(index) {
-            currentColorIndex = index;
-            localStorage.setItem('BG_COLOR_INDEX', index);
-            const isDark = document.body.getAttribute('data-theme') === 'dark';
-            document.documentElement.style.setProperty('--note-bg', isDark ? keepColors[index].dark : keepColors[index].light);
-            // بروزرسانی پالت نمایش داده شده
-            document.querySelectorAll('.color-swatch').forEach((swatch, i) => {
-                swatch.style.backgroundColor = isDark ? keepColors[i].dark : keepColors[i].light;
-                swatch.style.border = i === index ? '2px solid #4285f4' : '1px solid var(--border-color)';
-            });
+        // عملکرد Undo
+        undoBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                board.innerHTML = history[historyIndex];
+                updateUndoRedoButtons();
+            }
+        });
+
+        // عملکرد Redo
+        redoBtn.addEventListener('click', () => {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                board.innerHTML = history[historyIndex];
+                updateUndoRedoButtons();
+            }
+        });
+
+        // تولید رنگ تصادفی از پالت
+        function getRandomColor() {
+            return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+        }
+        
+        // تبدیل رنگ HEX به فرمتی که در دارک مود قابل استفاده باشد (شفافیت)
+        function applyColor(element, hexColor) {
+            element.style.backgroundColor = hexColor;
+            // در CSS با متغیر کنترل می‌شود تا در دارک مود ملایم شود
+            element.style.setProperty('--cat-bg', hexColor);
         }
 
-        function initApp() {
-            applySettings();
-            initColorPalette();
-            const bulkSelect = document.getElementById('bulkTargetCategory');
-            bulkSelect.innerHTML = '';
-            categoriesContainer.innerHTML = '';
-
-            defaultCategories.forEach(cat => {
-                // پر کردن منوی انتقال گروهی
-                bulkSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-
-                // ساخت دسته‌بندی‌ها
-                const catDiv = document.createElement('div');
-                catDiv.className = 'category';
-                catDiv.innerHTML = `
-                    <div class="category-header-wrap">
-                        <span class="drag-handle cat-drag-handle">⋮⋮</span>
-                        <div class="category-header" onclick="this.parentElement.parentElement.classList.toggle('collapsed')">${cat}</div>
+        // ایجاد دسته‌بندی جدید
+        document.getElementById('new-category-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                const categoryColor = getRandomColor();
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category collapsed'; // پیش‌فرض بسته (Collapse) است
+                
+                // ایجاد هدر با رنگ پس‌زمینه (در حالت دارک مود با CSS محو می‌شود)
+                categoryDiv.innerHTML = `
+                    <div class="category-header" style="background-color: color-mix(in srgb, ${categoryColor} calc(100% * var(--item-bg-dark-opacity)), transparent);">
+                        <span>${this.value.trim()}</span>
+                        <span class="toggle-icon">🔽</span>
                     </div>
-                    <div class="task-list" data-category="${cat}"></div>
-                    <div class="add-task">
-                        <input type="text" placeholder="+ افزودن به ${cat}..." onkeypress="handleAddTask(event, this)">
+                    <div class="category-content">
+                        <ul class="task-list"></ul>
+                        <div class="add-task-container">
+                            <input type="text" class="add-input task-input" placeholder="آیتم جدید + Enter">
+                        </div>
                     </div>
                 `;
-                categoriesContainer.appendChild(catDiv);
-            });
-
-            // درگ و دراپ دسته‌بندی‌ها (کل گروه)
-            new Sortable(categoriesContainer, {
-                handle: '.cat-drag-handle',
-                animation: 150,
-                onEnd: () => saveToCloud()
-            });
-
-            // درگ و دراپ تسک‌ها بین گروه‌ها
-            document.querySelectorAll('.task-list').forEach(list => {
-                new Sortable(list, {
-                    group: 'shared',
-                    handle: '.drag-handle',
-                    animation: 150,
-                    onEnd: () => saveToCloud()
-                });
-            });
-
-            if (GIST_ID && GITHUB_TOKEN) loadFromCloud();
-            else statusBar.innerText = 'لطفاً از آیکون ⚙️ تنظیمات را وارد کنید.';
-        }
-
-        function createTaskElement(text, isChecked = false) {
-            const div = document.createElement('div');
-            div.className = `task-item ${isChecked ? 'checked' : ''}`;
-            div.innerHTML = `
-                <span class="drag-handle">⋮⋮</span>
-                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleTask(this)">
-                <span contenteditable="true" onblur="saveToCloud()">${text}</span>
-            `;
-            return div;
-        }
-
-        function handleAddTask(e, inputElem) {
-            if (e.key === 'Enter' && inputElem.value.trim() !== '') {
-                const taskList = inputElem.parentElement.previousElementSibling;
-                taskList.appendChild(createTaskElement(inputElem.value.trim()));
-                inputElem.value = '';
-                saveToCloud();
+                
+                board.prepend(categoryDiv);
+                this.value = ''; // خالی کردن اینپوت اصلی
+                saveState();
             }
-        }
+        });
 
-        // تغییر عملکرد تیک زدن بر اساس حالت عادی یا گروهی
-        function toggleTask(checkbox) {
-            const taskItem = checkbox.parentElement;
-            if (isBulkMode) {
-                // حالت انتقال گروهی
-                if (checkbox.checked) taskItem.classList.add('selected-for-move');
-                else taskItem.classList.remove('selected-for-move');
-            } else {
-                // حالت عادی (انجام شد)
-                if (checkbox.checked) {
-                    taskItem.classList.add('checked');
-                    completedList.appendChild(taskItem);
+        // استفاده از Event Delegation برای کل اکشن‌های روی بورد (برای کارکرد صحیح بعد از Undo/Redo)
+        board.addEventListener('click', function(e) {
+            // باز و بسته کردن دسته‌بندی (Collapse/Expand)
+            if (e.target.closest('.category-header')) {
+                const category = e.target.closest('.category');
+                category.classList.toggle('collapsed');
+                const icon = category.querySelector('.toggle-icon');
+                icon.textContent = category.classList.contains('collapsed') ? '🔽' : '🔼';
+                saveState();
+            }
+
+            // تیک زدن چک‌باکس‌ها
+            if (e.target.classList.contains('task-checkbox')) {
+                const textSpan = e.target.nextElementSibling;
+                if (e.target.checked) {
+                    textSpan.classList.add('completed');
                 } else {
-                    taskItem.classList.remove('checked');
-                    document.querySelector('.task-list').appendChild(taskItem); // بازگشت به گروه اول
+                    textSpan.classList.remove('completed');
                 }
-                saveToCloud();
+                saveState();
             }
-        }
+        });
 
-        // --- مدیریت داده‌های ابری ---
-        async function saveToCloud() {
-            if (!GIST_ID || !GITHUB_TOKEN) return;
-            statusBar.innerText = 'در حال ذخیره...';
-            const data = { categories: {}, completed: [], settings: { fontSize: currentFontSize, color: currentColorIndex, theme: currentTheme } };
-            
-            document.querySelectorAll('.category').forEach(catDiv => {
-                const catName = catDiv.querySelector('.category-header').innerText;
-                data.categories[catName] = [];
-                catDiv.querySelectorAll('.task-list .task-item span[contenteditable]').forEach(span => {
-                    data.categories[catName].push(span.innerText);
-                });
-            });
-
-            completedList.querySelectorAll('.task-item span[contenteditable]').forEach(span => {
-                data.completed.push(span.innerText);
-            });
-
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ files: { 'tasks.json': { content: JSON.stringify(data, null, 2) } } })
-                });
-                if (res.ok) statusBar.innerText = 'ذخیره شد ✓';
-            } catch (err) { statusBar.innerText = 'خطای شبکه!'; }
-        }
-
-        async function loadFromCloud() {
-            if (!GIST_ID || !GITHUB_TOKEN) return;
-            statusBar.innerText = 'در حال دریافت...';
-            try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-                if (res.ok) {
-                    const gist = await res.json();
-                    const content = gist.files['tasks.json'].content;
-                    if (content && content.trim() !== '{}') {
-                        const data = JSON.parse(content);
-                        
-                        // بازگردانی تنظیمات اگر در کلود بود
-                        if(data.settings) {
-                            if(data.settings.fontSize) { currentFontSize = data.settings.fontSize; localStorage.setItem('FONT_SIZE', currentFontSize); }
-                            if(data.settings.color !== undefined) currentColorIndex = data.settings.color;
-                            if(data.settings.theme) { currentTheme = data.settings.theme; localStorage.setItem('THEME', currentTheme); }
-                            applySettings();
-                        }
-
-                        document.querySelectorAll('.task-list').forEach(l => l.innerHTML = '');
-                        if (data.categories) {
-                            // بازسازی بر اساس ترتیب ذخیره شده در کلود
-                            Object.keys(data.categories).forEach(catName => {
-                                let listElem = document.querySelector(`[data-category="${catName}"]`);
-                                // اگر عنوان جدیدی در کلود هست که در پیش‌فرض‌ها نیست
-                                if(!listElem) {
-                                    /* در نسخه‌های بعدی می‌توان امکان افزودن عنوان جدید را گذاشت */
-                                } else {
-                                    data.categories[catName].forEach(text => listElem.appendChild(createTaskElement(text, false)));
-                                }
-                            });
-                        }
-                        if (data.completed) data.completed.forEach(text => completedList.appendChild(createTaskElement(text, true)));
-                    }
-                    statusBar.innerText = 'بروزرسانی شد ✓';
+        // گوش دادن به Enter برای افزودن تسک (با Event Delegation)
+        board.addEventListener('keypress', function(e) {
+            if (e.target.classList.contains('task-input') && e.key === 'Enter') {
+                const text = e.target.value.trim();
+                if (text !== '') {
+                    const ul = e.target.closest('.category-content').querySelector('.task-list');
+                    const li = document.createElement('li');
+                    li.className = 'task-item';
+                    li.innerHTML = `
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">${text}</span>
+                    `;
+                    ul.appendChild(li);
+                    e.target.value = ''; // خالی کردن اینپوت
+                    saveState();
                 }
-            } catch (err) { statusBar.innerText = 'خطا در لود داده!'; }
-        }
-
-        // --- اکشن‌ها ---
-
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            const gId = prompt('Gist ID:', GIST_ID);
-            const token = prompt('GitHub Token:', GITHUB_TOKEN);
-            if (gId !== null && token !== null) {
-                GIST_ID = gId.trim(); GITHUB_TOKEN = token.trim();
-                localStorage.setItem('GIST_ID', GIST_ID); localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
-                loadFromCloud();
             }
         });
 
-        // تغییر سایز فونت
-        document.getElementById('fontPlus').addEventListener('click', () => {
-            currentFontSize = Math.min(currentFontSize + 1, 24);
-            localStorage.setItem('FONT_SIZE', currentFontSize);
-            applySettings(); saveToCloud();
-        });
-        document.getElementById('fontMinus').addEventListener('click', () => {
-            currentFontSize = Math.max(currentFontSize - 1, 12);
-            localStorage.setItem('FONT_SIZE', currentFontSize);
-            applySettings(); saveToCloud();
-        });
-
-        // تغییر تم
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('THEME', currentTheme);
-            applySettings(); saveToCloud();
-        });
-
-        // نمایش پالت رنگ
-        document.getElementById('colorBtn').addEventListener('click', () => {
-            const pal = document.getElementById('colorPalette');
-            pal.style.display = pal.style.display === 'flex' ? 'none' : 'flex';
-        });
-
-        // پیست کردن
-        document.getElementById('pasteBtn').addEventListener('click', () => {
-            const area = document.getElementById('pasteInput');
-            area.style.display = area.style.display === 'block' ? 'none' : 'block';
-        });
-        document.getElementById('pasteInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const lines = e.target.value.split('\n');
-                const firstList = document.querySelector('.task-list');
-                lines.forEach(line => {
-                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim();
-                    if(text) firstList.appendChild(createTaskElement(text));
-                });
-                e.target.value = ''; e.target.style.display = 'none'; saveToCloud();
-            }
-        });
-
-        // پاک کردن انجام شده‌ها
-        document.getElementById('clearCompletedBtn').addEventListener('click', () => {
-            if(confirm('کارهای تیک‌خورده پاک شوند؟')) { completedList.innerHTML = ''; saveToCloud(); }
-        });
-
-        // --- منطق انتقال گروهی (Bulk Move) ---
-        document.getElementById('bulkSelectBtn').addEventListener('click', () => {
-            isBulkMode = !isBulkMode;
-            document.body.classList.toggle('bulk-mode', isBulkMode);
-            // پاک کردن تیک‌های قبلی
-            document.querySelectorAll('.task-item input[type="checkbox"]').forEach(cb => {
-                cb.checked = cb.parentElement.classList.contains('checked'); // بازگردانی به وضعیت واقعی
-                cb.parentElement.classList.remove('selected-for-move');
-            });
-        });
-
-        document.getElementById('bulkCancelBtn').addEventListener('click', () => {
-            document.getElementById('bulkSelectBtn').click(); // خروج از حالت گروهی
-        });
-
-        document.getElementById('bulkMoveBtn').addEventListener('click', () => {
-            const targetCat = document.getElementById('bulkTargetCategory').value;
-            const targetList = document.querySelector(`.task-list[data-category="${targetCat}"]`);
+        // دکمه باز/بسته کردن همه (Expand / Collapse All)
+        let isAllCollapsed = true;
+        document.getElementById('btn-toggle-all').addEventListener('click', function() {
+            const categories = document.querySelectorAll('.category');
+            isAllCollapsed = !isAllCollapsed;
             
-            document.querySelectorAll('.task-item.selected-for-move').forEach(item => {
-                item.classList.remove('selected-for-move');
-                item.querySelector('input[type="checkbox"]').checked = false; // برداشتن تیک انتقال
-                targetList.appendChild(item);
+            categories.forEach(cat => {
+                const icon = cat.querySelector('.toggle-icon');
+                if (isAllCollapsed) {
+                    cat.classList.add('collapsed');
+                    if(icon) icon.textContent = '🔽';
+                } else {
+                    cat.classList.remove('collapsed');
+                    if(icon) icon.textContent = '🔼';
+                }
             });
-            
-            document.getElementById('bulkSelectBtn').click(); // خروج از حالت گروهی
-            saveToCloud();
+            this.textContent = isAllCollapsed ? '🔽' : '🔼';
+            saveState();
         });
 
-        initApp();
+        // تغییر تم (Dark Mode / Light Mode) و همگام‌سازی نوار آدرس
+        document.getElementById('btn-theme').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            // تغییر آیکون
+            this.textContent = isDark ? '☀️' : '🌙';
+            
+            // تغییر رنگ نوار آدرس گوشی و هدر/فوتر برای یکپارچگی
+            const themeColor = isDark ? '#121212' : '#ffffff';
+            themeMeta.setAttribute('content', themeColor);
+        });
+
+        // مقداردهی اولیه سیستم تاریخچه
+        saveState();
+
     </script>
 </body>
 </html>
+
