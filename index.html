@@ -419,4 +419,54 @@
             const area = document.getElementById('pasteInput');
             area.style.display = area.style.display === 'block' ? 'none' : 'block';
         });
-    
+        document.getElementById('pasteInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const lines = e.target.value.split('\n');
+                const firstList = document.querySelector('.task-list');
+                lines.forEach(line => {
+                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim();
+                    if(text) firstList.appendChild(createTaskElement(text));
+                });
+                e.target.value = ''; e.target.style.display = 'none'; saveToCloud();
+            }
+        });
+
+        // پاک کردن انجام شده‌ها
+        document.getElementById('clearCompletedBtn').addEventListener('click', () => {
+            if(confirm('کارهای تیک‌خورده پاک شوند؟')) { completedList.innerHTML = ''; saveToCloud(); }
+        });
+
+        // --- منطق انتقال گروهی (Bulk Move) ---
+        document.getElementById('bulkSelectBtn').addEventListener('click', () => {
+            isBulkMode = !isBulkMode;
+            document.body.classList.toggle('bulk-mode', isBulkMode);
+            // پاک کردن تیک‌های قبلی
+            document.querySelectorAll('.task-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = cb.parentElement.classList.contains('checked'); // بازگردانی به وضعیت واقعی
+                cb.parentElement.classList.remove('selected-for-move');
+            });
+        });
+
+        document.getElementById('bulkCancelBtn').addEventListener('click', () => {
+            document.getElementById('bulkSelectBtn').click(); // خروج از حالت گروهی
+        });
+
+        document.getElementById('bulkMoveBtn').addEventListener('click', () => {
+            const targetCat = document.getElementById('bulkTargetCategory').value;
+            const targetList = document.querySelector(`.task-list[data-category="${targetCat}"]`);
+            
+            document.querySelectorAll('.task-item.selected-for-move').forEach(item => {
+                item.classList.remove('selected-for-move');
+                item.querySelector('input[type="checkbox"]').checked = false; // برداشتن تیک انتقال
+                targetList.appendChild(item);
+            });
+            
+            document.getElementById('bulkSelectBtn').click(); // خروج از حالت گروهی
+            saveToCloud();
+        });
+
+        initApp();
+    </script>
+</body>
+</html>
