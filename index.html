@@ -2,124 +2,543 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff" id="meta-theme-color">
-    <title>مدیریت کارها</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- رنگ نوار آدرس بار مرورگر (توسط جاوا اسکریپت داینامیک عوض می‌شود) -->
+    <meta name="theme-color" content="#ffffff" id="themeColorMeta">
+    <title>My Super Keep</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
     <style>
         :root {
-            --bg-color: #ffffff;
+            --note-bg: #ffffff; /* رنگ بک‌گراند اصلی */
             --text-color: #202124;
-            --toolbar-bg: #ffffff;
-            --item-bg: #f9f9f9;
+            --border-color: #e0e0e0;
+            --checked-text: #5f6368;
+            --hover-bg: rgba(0,0,0,0.05);
+            --app-font-size: 15px;
         }
-        body.dark-mode {
-            --bg-color: #121212;
+
+        [data-theme="dark"] {
             --text-color: #e8eaed;
-            --toolbar-bg: #121212;
-            --item-bg: #1e1e1e;
+            --border-color: #5f6368;
+            --checked-text: #9aa0a6;
+            --hover-bg: rgba(255,255,255,0.05);
         }
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; padding: 0; transition: 0.3s; }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--note-bg);
+            color: var(--text-color);
+            font-size: var(--app-font-size);
+            margin: 0; padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
+            padding: 10px 15px; background-color: var(--note-bg);
+            position: sticky; top: 0; z-index: 100;
+            transition: background-color 0.3s;
+        }
+
+        .controls { 
+            display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center;
+        }
+        .controls span { 
+            font-size: 19px; cursor: pointer; user-select: none; padding: 4px; 
+            border-radius: 4px; transition: background 0.2s;
+        }
+        .controls span:active { transform: scale(0.9); }
+        .controls span:hover { background: var(--hover-bg); }
+
+        .note-container {
+            max-width: 750px; margin: 0 auto;
+            background-color: transparent; padding: 15px;
+            transition: background-color 0.3s;
+        }
+
+        /* استایل‌های درگ و دراپ */
+        .drag-handle {
+            cursor: grab; color: #9aa0a6; padding: 0 5px; font-size: 18px; user-select: none;
+        }
+        .drag-handle:active { cursor: grabbing; }
+
+        .category { margin-bottom: 15px; padding-bottom: 8px; }
+        .category-header-wrap { display: flex; align-items: center; }
         
-        .toolbar { display: flex; gap: 10px; padding: 10px; background: var(--toolbar-bg); position: sticky; top: 0; z-index: 10; border-bottom: 0; }
-        .toolbar button { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
-        
-        #new-category { width: 90%; margin: 10px auto; display: block; padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: var(--bg-color); color: var(--text-color); }
-        
-        .category { margin: 10px; border-radius: 12px; overflow: hidden; background: var(--item-bg); }
-        .cat-header { padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
-        .cat-content { padding: 10px; display: none; }
-        .cat-content.show { display: block; }
-        
-        .task-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
-        .task-checkbox { width: 20px; height: 20px; }
-        .completed { text-decoration: line-through; opacity: 0.6; }
+        .category-header { 
+            font-weight: bold; font-size: 1.1em; cursor: pointer; padding: 8px 0; 
+            display: flex; align-items: center; flex-grow: 1; user-select: none;
+            transition: color 0.3s;
+        }
+        .category-header::before { content: '▼'; font-size: 0.6em; margin-left: 8px; transition: transform 0.2s; color: var(--text-color); }
+        .category.collapsed .category-header::before { transform: rotate(90deg); }
+        .category.collapsed .task-list, .category.collapsed .add-task { display: none; }
+
+        /* رنگ‌بندی‌های اختصاصی برای عنوان دسته‌بندی‌ها (حالت روشن) */
+        .category:nth-child(1) .category-header { color: #d32f2f; }
+        .category:nth-child(2) .category-header { color: #1976d2; }
+        .category:nth-child(3) .category-header { color: #388e3c; }
+        .category:nth-child(4) .category-header { color: #f57c00; }
+        .category:nth-child(5) .category-header { color: #7b1fa2; }
+        .category:nth-child(6) .category-header { color: #00796b; }
+
+        /* رنگ‌بندی‌های اختصاصی برای عنوان دسته‌بندی‌ها (حالت تاریک) */
+        [data-theme="dark"] .category:nth-child(1) .category-header { color: #ef9a9a; }
+        [data-theme="dark"] .category:nth-child(2) .category-header { color: #90caf9; }
+        [data-theme="dark"] .category:nth-child(3) .category-header { color: #a5d6a7; }
+        [data-theme="dark"] .category:nth-child(4) .category-header { color: #ffcc80; }
+        [data-theme="dark"] .category:nth-child(5) .category-header { color: #ce93d8; }
+        [data-theme="dark"] .category:nth-child(6) .category-header { color: #80cbc4; }
+
+        .task-list { min-height: 15px; }
+        .task-item { display: flex; align-items: center; padding: 6px 0; border-radius: 4px; }
+        .task-item:hover { background-color: var(--hover-bg); }
+        .task-item input[type="checkbox"] { margin-left: 8px; transform: scale(1.2); }
+        .task-item span[contenteditable] { flex-grow: 1; outline: none; padding: 2px 5px; min-height: 20px; }
+        .task-item.checked span[contenteditable] { text-decoration: line-through; color: var(--checked-text); }
+        .task-item.selected-for-move { background-color: rgba(66, 133, 244, 0.15); }
+
+        .add-task input {
+            width: 100%; background: transparent; border: none;
+            color: var(--text-color); font-family: inherit; font-size: 1em; outline: none; padding: 6px 0;
+        }
+
+        .completed-section { margin-top: 25px; padding-top: 15px; border-top: 2px dashed var(--border-color); }
+        .completed-title { color: var(--checked-text); font-size: 0.9em; margin-bottom: 8px; }
+
+        /* پالت رنگ‌ها */
+        .color-palette {
+            display: none; justify-content: center; gap: 8px; flex-wrap: wrap;
+            padding: 10px; margin-bottom: 15px; border-radius: 8px;
+            background: var(--hover-bg);
+        }
+        .color-swatch {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        /* نوار ابزار انتخاب گروهی */
+        .bulk-action-bar {
+            display: none; background: #4285f4; color: white; padding: 10px; 
+            border-radius: 8px; margin-bottom: 15px; align-items: center; justify-content: space-between;
+        }
+        body.bulk-mode .bulk-action-bar { display: flex; flex-wrap: wrap; gap: 10px; }
+        .bulk-action-bar select { padding: 5px; font-family: inherit; border-radius: 4px; }
+        .bulk-action-bar button { background: white; color: #4285f4; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-family: inherit;}
+
+        .paste-area {
+            width: 100%; background: transparent; border: 1px solid var(--border-color);
+            color: var(--text-color); border-radius: 8px; padding: 10px; margin-bottom: 15px;
+            font-family: inherit; resize: vertical; display: none; box-sizing: border-box;
+        }
+        .status-bar { font-size: 0.8em; color: var(--checked-text); text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="toolbar">
-        <button onclick="undo()">↩️</button>
-        <button onclick="redo()">↪️</button>
-        <button onclick="toggleAll()">↕️</button>
-        <button onclick="toggleTheme()">🌙</button>
+    <div class="header">
+        <div class="controls">
+            <span id="undoBtn" title="بازگردانی">↩️</span>
+            <span id="redoBtn" title="انجام مجدد">↪️</span>
+            <span id="bulkSelectBtn" title="انتخاب گروهی برای انتقال">☑️</span>
+            <span id="toggleAllBtn" title="باز/بسته کردن همه">↕️</span>
+            <span id="pasteBtn" title="پیست از کیپ">📋</span>
+            <span id="colorBtn" title="تغییر رنگ">🎨</span>
+            <span id="fontMinus" title="کوچک کردن فونت">A-</span>
+            <span id="fontPlus" title="بزرگ کردن فونت">A+</span>
+            <span id="themeToggle" title="تم تاریک/روشن">🌙</span>
+            <span id="settingsBtn" title="تنظیمات ابری">⚙️</span>
+        </div>
     </div>
 
-    <input type="text" id="new-category" placeholder="افزودن لیست جدید...">
+    <div class="note-container">
+        <!-- پالت رنگ‌های کیپ -->
+        <div id="colorPalette" class="color-palette"></div>
 
-    <div id="app"></div>
+        <!-- نوار انتقال گروهی -->
+        <div id="bulkActionBar" class="bulk-action-bar">
+            <span>تسک‌های مورد نظر را تیک بزنید</span>
+            <div>
+                <select id="bulkTargetCategory"></select>
+                <button id="bulkMoveBtn">انتقال</button>
+                <button id="bulkCancelBtn" style="background: transparent; color: white; border: 1px solid white;">لغو</button>
+            </div>
+        </div>
+
+        <textarea id="pasteInput" class="paste-area" rows="3" placeholder="لیست کپی شده را اینجا پیست کنید و اینتر بزنید..."></textarea>
+        
+        <div id="categories-container"></div>
+
+        <div class="completed-section">
+            <div class="completed-title">کارهای انجام شده (برای حذف کلیک کنید)</div>
+            <div id="completed-list" class="task-list"></div>
+            <button id="clearCompletedBtn" style="margin-top:10px; padding:5px 10px; font-family:inherit; cursor:pointer; border-radius: 4px; border: 1px solid var(--border-color); background: var(--hover-bg); color: var(--text-color);">پاک کردن تیک‌خورده‌ها</button>
+        </div>
+        <div id="statusBar" class="status-bar">آماده‌سازی...</div>
+    </div>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('todoData')) || [];
-        let history = [JSON.stringify(data)];
-        let historyIndex = 0;
+        const defaultCategories = [
+            "کارهای ضروری", "لیست خرید", "امور کاری",
+            "درمان و پزشکی", "کمپر", "تعمیرات و نگهداری خودرو"
+        ];
 
-        function save() {
-            localStorage.setItem('todoData', JSON.stringify(data));
-            history = history.slice(0, historyIndex + 1);
-            history.push(JSON.stringify(data));
-            historyIndex++;
-            render();
+        // رنگ‌های گوگل کیپ
+        const keepColors = [
+            { light: '#ffffff', dark: '#202124' }, // پیش‌فرض
+            { light: '#f28b82', dark: '#5c2b29' }, // قرمز
+            { light: '#fbbc04', dark: '#614a19' }, // نارنجی
+            { light: '#fff475', dark: '#635d19' }, // زرد
+            { light: '#ccff90', dark: '#345920' }, // سبز
+            { light: '#a7ffeb', dark: '#16504b' }, // فیروزه‌ای
+            { light: '#cbf0f8', dark: '#2d555e' }, // آبی روشن
+            { light: '#aecbfa', dark: '#1e3a5f' }, // آبی تیره
+            { light: '#d7aefb', dark: '#42275e' }, // بنفش
+            { light: '#e6c9a8', dark: '#442f19' }, // قهوه‌ای
+            { light: '#e8eaed', dark: '#3c3f41' }  // خاکستری
+        ];
+
+        let GIST_ID = localStorage.getItem('GIST_ID') || '';
+        let GITHUB_TOKEN = localStorage.getItem('GITHUB_TOKEN') || '';
+        let currentTheme = localStorage.getItem('THEME') || 'light';
+        let currentColorIndex = parseInt(localStorage.getItem('BG_COLOR_INDEX')) || 0;
+        let currentFontSize = parseInt(localStorage.getItem('FONT_SIZE')) || 15;
+        let isBulkMode = false;
+
+        // سیستم Undo/Redo
+        let historyStack = [];
+        let historyIndex = -1;
+        let isRestoringHistory = false;
+
+        const categoriesContainer = document.getElementById('categories-container');
+        const completedList = document.getElementById('completed-list');
+        const statusBar = document.getElementById('statusBar');
+
+        function applySettings() {
+            document.documentElement.style.setProperty('--app-font-size', currentFontSize + 'px');
+            if (currentTheme === 'dark') document.body.setAttribute('data-theme', 'dark');
+            else document.body.removeAttribute('data-theme');
+            applyColor(currentColorIndex);
         }
 
-        function undo() { if(historyIndex > 0) { historyIndex--; data = JSON.parse(history[historyIndex]); localStorage.setItem('todoData', JSON.stringify(data)); render(); } }
-        function redo() { if(historyIndex < history.length - 1) { historyIndex++; data = JSON.parse(history[historyIndex]); localStorage.setItem('todoData', JSON.stringify(data)); render(); } }
-
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            document.getElementById('meta-theme-color').content = isDark ? '#121212' : '#ffffff';
-        }
-
-        function toggleAll() {
-            const contents = document.querySelectorAll('.cat-content');
-            const shouldShow = contents[0]?.style.display !== 'block';
-            contents.forEach(c => c.style.display = shouldShow ? 'block' : 'none');
-        }
-
-        document.getElementById('new-category').onkeydown = (e) => {
-            if(e.key === 'Enter' && e.target.value) {
-                data.push({ title: e.target.value, collapsed: true, tasks: [], color: `hsl(${Math.random() * 360}, 70%, 80%)` });
-                e.target.value = '';
-                save();
-            }
-        };
-
-        function render() {
-            const app = document.getElementById('app');
-            app.innerHTML = '';
-            data.forEach((cat, catIdx) => {
-                const div = document.createElement('div');
-                div.className = 'category';
-                div.style.borderRight = `5px solid ${cat.color}`;
-                div.innerHTML = `
-                    <div class="cat-header" onclick="toggleCat(${catIdx})">
-                        ${cat.title} <span>${cat.collapsed ? '🔽' : '🔼'}</span>
-                    </div>
-                    <div class="cat-content ${cat.collapsed ? '' : 'show'}">
-                        ${cat.tasks.map((t, tIdx) => `
-                            <div class="task-item">
-                                <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${catIdx}, ${tIdx})">
-                                <span class="${t.done ? 'completed' : ''}">${t.text}</span>
-                            </div>
-                        `).join('')}
-                        <input type="text" placeholder="تسک جدید..." onkeydown="addTask(event, ${catIdx})">
-                    </div>
-                `;
-                app.appendChild(div);
+        function initColorPalette() {
+            const palette = document.getElementById('colorPalette');
+            palette.innerHTML = '';
+            keepColors.forEach((color, index) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = document.body.getAttribute('data-theme') === 'dark' ? color.dark : color.light;
+                swatch.onclick = () => {
+                    applyColor(index);
+                    saveToCloud();
+                };
+                palette.appendChild(swatch);
             });
         }
 
-        function toggleCat(idx) { data[idx].collapsed = !data[idx].collapsed; render(); }
-        function toggleTask(cIdx, tIdx) { data[cIdx].tasks[tIdx].done = !data[cIdx].tasks[tIdx].done; save(); }
-        function addTask(e, idx) {
-            if(e.key === 'Enter' && e.target.value) {
-                data[idx].tasks.push({ text: e.target.value, done: false });
-                e.target.value = '';
-                save();
+        function applyColor(index) {
+            currentColorIndex = index;
+            localStorage.setItem('BG_COLOR_INDEX', index);
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const colorCode = isDark ? keepColors[index].dark : keepColors[index].light;
+            
+            // تنظیم رنگ در کل برنامه و مرورگر
+            document.documentElement.style.setProperty('--note-bg', colorCode);
+            document.getElementById('themeColorMeta').content = colorCode;
+
+            document.querySelectorAll('.color-swatch').forEach((swatch, i) => {
+                swatch.style.backgroundColor = isDark ? keepColors[i].dark : keepColors[i].light;
+                swatch.style.border = i === index ? '2px solid #4285f4' : '1px solid var(--border-color)';
+            });
+        }
+
+        function initApp() {
+            applySettings();
+            initColorPalette();
+            const bulkSelect = document.getElementById('bulkTargetCategory');
+            bulkSelect.innerHTML = '';
+            categoriesContainer.innerHTML = '';
+
+            defaultCategories.forEach(cat => {
+                bulkSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+
+                const catDiv = document.createElement('div');
+                // دسته‌بندی‌ها به صورت پیش‌فرض بسته هستند (کلاس collapsed)
+                catDiv.className = 'category collapsed';
+                catDiv.innerHTML = `
+                    <div class="category-header-wrap">
+                        <span class="drag-handle cat-drag-handle">⋮⋮</span>
+                        <div class="category-header" onclick="this.parentElement.parentElement.classList.toggle('collapsed')">${cat}</div>
+                    </div>
+                    <div class="task-list" data-category="${cat}"></div>
+                    <div class="add-task">
+                        <input type="text" placeholder="+ افزودن به ${cat}..." onkeydown="handleAddTask(event, this)">
+                    </div>
+                `;
+                categoriesContainer.appendChild(catDiv);
+            });
+
+            new Sortable(categoriesContainer, {
+                handle: '.cat-drag-handle',
+                animation: 150,
+                onEnd: () => saveToCloud()
+            });
+
+            document.querySelectorAll('.task-list').forEach(list => {
+                new Sortable(list, {
+                    group: 'shared',
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: () => saveToCloud()
+                });
+            });
+
+            if (GIST_ID && GITHUB_TOKEN) loadFromCloud();
+            else statusBar.innerText = 'لطفاً از آیکون ⚙️ تنظیمات را وارد کنید.';
+        }
+
+        function createTaskElement(text, isChecked = false) {
+            const div = document.createElement('div');
+            div.className = `task-item ${isChecked ? 'checked' : ''}`;
+            div.innerHTML = `
+                <span class="drag-handle">⋮⋮</span>
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleTask(this)">
+                <span contenteditable="true" onblur="saveToCloud()">${text}</span>
+            `;
+            return div;
+        }
+
+        // رفع مشکل کلید اینتر در موبایل
+        function handleAddTask(e, inputElem) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                if (inputElem.value.trim() !== '') {
+                    const taskList = inputElem.parentElement.previousElementSibling;
+                    taskList.appendChild(createTaskElement(inputElem.value.trim()));
+                    inputElem.value = '';
+                    saveToCloud();
+                }
             }
         }
 
-        render();
+        function toggleTask(checkbox) {
+            const taskItem = checkbox.parentElement;
+            if (isBulkMode) {
+                if (checkbox.checked) taskItem.classList.add('selected-for-move');
+                else taskItem.classList.remove('selected-for-move');
+            } else {
+                if (checkbox.checked) {
+                    taskItem.classList.add('checked');
+                    completedList.appendChild(taskItem);
+                } else {
+                    taskItem.classList.remove('checked');
+                    document.querySelector('.task-list').appendChild(taskItem); 
+                }
+                saveToCloud();
+            }
+        }
+
+        // تولید آبجکت دیتای وضعیت کنونی برنامه
+        function getCurrentStateData() {
+            const data = { categories: {}, completed: [], settings: { fontSize: currentFontSize, color: currentColorIndex, theme: currentTheme } };
+            document.querySelectorAll('.category').forEach(catDiv => {
+                const catName = catDiv.querySelector('.category-header').innerText;
+                data.categories[catName] = [];
+                catDiv.querySelectorAll('.task-list .task-item span[contenteditable]').forEach(span => {
+                    data.categories[catName].push(span.innerText);
+                });
+            });
+            completedList.querySelectorAll('.task-item span[contenteditable]').forEach(span => {
+                data.completed.push(span.innerText);
+            });
+            return data;
+        }
+
+        // مدیریت ذخیره در تاریخچه برای Undo/Redo
+        function recordHistory(stateData) {
+            if (isRestoringHistory) return;
+            const stateStr = JSON.stringify(stateData);
+            if (historyIndex >= 0 && JSON.stringify(historyStack[historyIndex]) === stateStr) return;
+            
+            historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(stateData);
+            historyIndex++;
+        }
+
+        // بارگذاری وضعیت در محیط کاربری (بدون آپلود ابری)
+        function renderState(data) {
+            document.querySelectorAll('.task-list').forEach(l => l.innerHTML = '');
+            completedList.innerHTML = '';
+            if (data.categories) {
+                Object.keys(data.categories).forEach(catName => {
+                    let listElem = document.querySelector(`[data-category="${catName}"]`);
+                    if (listElem) {
+                        data.categories[catName].forEach(text => listElem.appendChild(createTaskElement(text, false)));
+                    }
+                });
+            }
+            if (data.completed) data.completed.forEach(text => completedList.appendChild(createTaskElement(text, true)));
+        }
+
+        // --- مدیریت داده‌های ابری ---
+        async function saveToCloud(recordToHistory = true) {
+            if (!GIST_ID || !GITHUB_TOKEN) return;
+            statusBar.innerText = 'در حال ذخیره...';
+            const data = getCurrentStateData();
+            
+            if (recordToHistory) recordHistory(data);
+
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: { 'tasks.json': { content: JSON.stringify(data, null, 2) } } })
+                });
+                if (res.ok) statusBar.innerText = 'ذخیره شد ✓';
+            } catch (err) { statusBar.innerText = 'خطای شبکه!'; }
+        }
+
+        async function loadFromCloud() {
+            if (!GIST_ID || !GITHUB_TOKEN) return;
+            statusBar.innerText = 'در حال دریافت...';
+            try {
+                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+                if (res.ok) {
+                    const gist = await res.json();
+                    const content = gist.files['tasks.json'].content;
+                    if (content && content.trim() !== '{}') {
+                        const data = JSON.parse(content);
+                        
+                        if(data.settings) {
+                            if(data.settings.fontSize) { currentFontSize = data.settings.fontSize; localStorage.setItem('FONT_SIZE', currentFontSize); }
+                            if(data.settings.color !== undefined) currentColorIndex = data.settings.color;
+                            if(data.settings.theme) { currentTheme = data.settings.theme; localStorage.setItem('THEME', currentTheme); }
+                            applySettings();
+                            initColorPalette(); // برای آپدیت تیک پالت رنگ
+                        }
+                        renderState(data);
+                        recordHistory(data); // ثبت استیت اولیه در هیستوری
+                    }
+                    statusBar.innerText = 'بروزرسانی شد ✓';
+                }
+            } catch (err) { statusBar.innerText = 'خطا در لود داده!'; }
+        }
+
+        // --- اکشن‌ها ---
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                isRestoringHistory = true;
+                renderState(historyStack[historyIndex]);
+                saveToCloud(false).finally(() => isRestoringHistory = false);
+            }
+        });
+
+        document.getElementById('redoBtn').addEventListener('click', () => {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                isRestoringHistory = true;
+                renderState(historyStack[historyIndex]);
+                saveToCloud(false).finally(() => isRestoringHistory = false);
+            }
+        });
+
+        document.getElementById('toggleAllBtn').addEventListener('click', () => {
+            const allCategories = document.querySelectorAll('.category');
+            const anyCollapsed = Array.from(allCategories).some(c => c.classList.contains('collapsed'));
+            if (anyCollapsed) {
+                allCategories.forEach(c => c.classList.remove('collapsed'));
+            } else {
+                allCategories.forEach(c => c.classList.add('collapsed'));
+            }
+        });
+
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            const gId = prompt('Gist ID:', GIST_ID);
+            const token = prompt('GitHub Token:', GITHUB_TOKEN);
+            if (gId !== null && token !== null) {
+                GIST_ID = gId.trim(); GITHUB_TOKEN = token.trim();
+                localStorage.setItem('GIST_ID', GIST_ID); localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
+                loadFromCloud();
+            }
+        });
+
+        document.getElementById('fontPlus').addEventListener('click', () => {
+            currentFontSize = Math.min(currentFontSize + 1, 24);
+            localStorage.setItem('FONT_SIZE', currentFontSize);
+            applySettings(); saveToCloud();
+        });
+        document.getElementById('fontMinus').addEventListener('click', () => {
+            currentFontSize = Math.max(currentFontSize - 1, 12);
+            localStorage.setItem('FONT_SIZE', currentFontSize);
+            applySettings(); saveToCloud();
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('THEME', currentTheme);
+            applySettings(); saveToCloud();
+        });
+
+        document.getElementById('colorBtn').addEventListener('click', () => {
+            const pal = document.getElementById('colorPalette');
+            pal.style.display = pal.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        document.getElementById('pasteBtn').addEventListener('click', () => {
+            const area = document.getElementById('pasteInput');
+            area.style.display = area.style.display === 'block' ? 'none' : 'block';
+        });
+        
+        document.getElementById('pasteInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                const lines = e.target.value.split('\n');
+                const firstList = document.querySelector('.task-list');
+                lines.forEach(line => {
+                    const text = line.replace(/^[☐☑-\s\*]+/, '').trim();
+                    if(text) firstList.appendChild(createTaskElement(text));
+                });
+                e.target.value = ''; e.target.style.display = 'none'; saveToCloud();
+            }
+        });
+
+        document.getElementById('clearCompletedBtn').addEventListener('click', () => {
+            if(confirm('کارهای تیک‌خورده پاک شوند؟')) { completedList.innerHTML = ''; saveToCloud(); }
+        });
+
+        // --- منطق انتقال گروهی (Bulk Move) ---
+        document.getElementById('bulkSelectBtn').addEventListener('click', () => {
+            isBulkMode = !isBulkMode;
+            document.body.classList.toggle('bulk-mode', isBulkMode);
+            document.querySelectorAll('.task-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = cb.parentElement.classList.contains('checked'); 
+                cb.parentElement.classList.remove('selected-for-move');
+            });
+        });
+
+        document.getElementById('bulkCancelBtn').addEventListener('click', () => {
+            document.getElementById('bulkSelectBtn').click(); 
+        });
+
+        document.getElementById('bulkMoveBtn').addEventListener('click', () => {
+            const targetCat = document.getElementById('bulkTargetCategory').value;
+            const targetList = document.querySelector(`.task-list[data-category="${targetCat}"]`);
+            
+            document.querySelectorAll('.task-item.selected-for-move').forEach(item => {
+                item.classList.remove('selected-for-move');
+                item.querySelector('input[type="checkbox"]').checked = false; 
+                targetList.appendChild(item);
+            });
+            
+            document.getElementById('bulkSelectBtn').click(); 
+            saveToCloud();
+        });
+
+        initApp();
     </script>
 </body>
 </html>
